@@ -1,0 +1,32 @@
+services:
+    backend:
+        image: golang:1.21
+        ports:
+          - "8080:80"
+        stdin_open: true
+        tty: true
+        volumes:
+          - ./backend:/var/www/html
+        depends_on:
+          - db
+        command: bash
+    frontend:
+        image: nginx:alpine
+        ports:
+          - "3000:80"
+        stdin_open: true
+        tty: true
+        volumes:
+          - ./frontend/spa:/usr/share/nginx/html
+        command: bash
+    db:
+        image: mysql:8
+        env_file:
+            - db/.env
+        stdin_open: true
+        tty: true
+        volumes:
+            - db_data:/var/lib/mysql
+        command: bash
+volumes:
+    db_data:
