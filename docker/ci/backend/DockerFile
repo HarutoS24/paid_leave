@@ -1,0 +1,10 @@
+FROM golang:1.24.2
+COPY /backend /backend
+COPY /docker/ci/backend/ci.sh /ci.sh
+WORKDIR /
+
+RUN chmod u+x /ci.sh && \
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.57.0
+
+CMD ["/ci.sh"]
+
