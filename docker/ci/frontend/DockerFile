@@ -1,0 +1,8 @@
+FROM node:20-slim
+COPY /frontend /frontend
+COPY /docker/ci/frontend/ci.sh /ci.sh
+WORKDIR /
+
+RUN chmod u+x /ci.sh
+
+CMD ["/ci.sh"]

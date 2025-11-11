@@ -1,0 +1,24 @@
+name: Check Lint and Format
+
+on:
+  push:
+
+jobs:
+  check_frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Code
+        uses: actions/checkout@v4
+      - name: Build Image
+        run: docker build -f docker/ci/frontend/DockerFile -t frontend_ci .
+      - name: Run the Container
+        run: docker run --rm frontend_ci
+  check_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the Code
+        uses: actions/checkout@v4
+      - name: Build Image
+        run: docker build -f docker/ci/backend/DockerFile -t backend_ci .
+      - name: Run the Container
+        run: docker run --rm backend_ci
