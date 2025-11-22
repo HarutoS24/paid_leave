@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -e
+
+mysql -u root -p"${MYSQL_ROOT_PASSWORD}" <<EOSQL
+CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
+GRANT SELECT, INSERT, UPDATE, DELETE ON kintai_db.* TO '${MYSQL_USER}'@'%';
+EOSQL

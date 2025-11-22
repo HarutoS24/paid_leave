@@ -1,0 +1,7 @@
+FROM node:20-slim
+COPY /docker/cd/frontend/cd.sh /cd.sh
+
+WORKDIR /
+RUN chmod u+x /cd.sh
+
+CMD ["/cd.sh"]
