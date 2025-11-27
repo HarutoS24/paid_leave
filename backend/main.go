@@ -26,8 +26,7 @@ func init() {
 func main() {
 	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_PASSWORD")
-	db_name := os.Getenv("")
-	dsn := fmt.Sprintf("%s:%s@tcp(db:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, db_name)
+	dsn := fmt.Sprintf("%s:%s@tcp(db:3306)/?charset=utf8mb4&parseTime=True&loc=Local", user, password)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		panic(err)
