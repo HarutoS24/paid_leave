@@ -21,9 +21,6 @@ type PaidLeaveInfoSum struct {
 
 var VacationCounts = []int{10, 11, 12, 14, 16, 18, 20}
 
-const dev_joiningdate = "2023/08/29"
-const dev_today = "2027/03/10"
-
 type AddPaidLeaveParams struct {
 	EmployeeID   string
 	VacationDate time.Time
@@ -41,10 +38,9 @@ func CalculateVacationGivenDateByOffset(db *sql.DB, employeeID string, off int) 
 		return nil, err
 	}
 	joiningDate := employee.JoiningDate
-	joiningDate, _ = time.Parse("2006/01/02", dev_joiningdate)
 	baseDate := addMonthAccordingToCalendar(joiningDate, 6)
 	fmt.Printf("basedate: %s\n", baseDate.String())
-	today, _ := time.Parse("2006/01/02", dev_today)
+	today := time.Now()
 	i := 0
 	var vacationGivenPoints []time.Time
 	for {
@@ -80,7 +76,6 @@ func CalculateVacationCountByOffset(db *sql.DB, employeeID string, off int) (*in
 		return nil, err
 	}
 	joiningDate := employee.JoiningDate
-	joiningDate, _ = time.Parse("2006/01/02", dev_joiningdate)
 	baseDate := addMonthAccordingToCalendar(joiningDate, 6)
 	i := 0
 	for {
@@ -136,7 +131,7 @@ func CalculateGeneralPaidLeaveInfo(db *sql.DB, employeeID string, off int) (*Pai
 		return nil, nil
 	}
 	info.GivenAt = *givenAtPtr
-	today, _ := time.Parse("2006/01/02", dev_today)
+	today := time.Now()
 	expireDate := givenAtPtr.AddDate(2, 0, 0)
 	if today.After(expireDate) || today.Equal(expireDate) {
 		return nil, nil
@@ -151,7 +146,7 @@ func CalculateGeneralPaidLeaveInfo(db *sql.DB, employeeID string, off int) (*Pai
 
 func CalculateSumPaidLeaveInfo(db *sql.DB, employeeID string) (*PaidLeaveInfoSum, error) {
 	var infoSum = PaidLeaveInfoSum{}
-	today, _ := time.Parse("2006/01/02", dev_today)
+	today := time.Now()
 	for i := 0; i <= 3; i++ {
 		info, err := CalculateGeneralPaidLeaveInfo(db, employeeID, i)
 		if err != nil {
@@ -175,7 +170,7 @@ func AddPaidLeaveByOffset(db *sql.DB, params AddPaidLeaveParams, off int) error 
 	if err != nil {
 		return err
 	}
-	today, _ := time.Parse("2006/01/02", dev_today)
+	today := time.Now()
 	var p = []repo.AddLeaveEmployeeParams{{
 		EmployeeID:   params.EmployeeID,
 		Duration:     params.Duration,
