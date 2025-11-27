@@ -1,24 +1,29 @@
 package main
 
 import (
+	"backend/handler"
+	"backend/middleware"
+	"backend/service"
 	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
 )
 
-func main() {
-	http.HandleFunc("/", handler)
-	fmt.Println("starting...")
-	err := http.ListenAndServe(":80", nil)
-	if err != nil {
-		fmt.Printf("ListenAndServe error: %v\n", err)
+var store *sessions.FilesystemStore
+
+func init() {
+	secretKey := os.Getenv("SECRET_KEY")
+	if secretKey == "" {
+		panic("secret keyが設定されていません")
 	}
+	store = sessions.NewFilesystemStore("/session_data", []byte(secretKey))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func main() {
 	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_PASSWORD")
 	db_name := os.Getenv("")
@@ -34,15 +39,26 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	var name string
+	http.Handle("/auth/login",
+		middleware.RequireAuthSession(store, middleware.UseDB(db,
+			http.HandlerFunc(handler.LoginHandler),
+		)),
+	)
+	http.Handle("/auth/info",
+		middleware.RequireLogin(store, db, middleware.UseDB(db,
+			http.HandlerFunc(handler.GetLoggedInEmployeeHandler),
+		)),
+	)
+	http.Handle("/employee/add_demo", middleware.UseDB(db,
+		http.HandlerFunc(handler.AddEmployeeHandler),
+	))
 
-	err = db.QueryRow("SELECT employee_name FROM kintai_db.employees_tbl").Scan(&name)
+	http.Handle("/vacation/add", middleware.UseDB(db, middleware.RequireLogin(store, db,
+		http.HandlerFunc(handler.AddPaidLeaveHandler),
+	)))
+	fmt.Println("starting...")
+	err = http.ListenAndServe(":80", nil)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			fmt.Fprintln(w, "No result found")
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		fmt.Printf("ListenAndServe error: %v\n", err)
 	}
-	fmt.Fprintf(w, "%s", name)
 }
