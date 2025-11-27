@@ -49,6 +49,12 @@ func main() {
 			http.HandlerFunc(handler.GetLoggedInEmployeeHandler),
 		)),
 	)
+	http.Handle("/employee/add",
+		middleware.RequireAdminLogin(store, db, middleware.UseDB(db,
+			http.HandlerFunc(handler.AddEmployeeHandler),
+		)),
+	)
+
 	http.Handle("/employee/add_demo", middleware.UseDB(db,
 		http.HandlerFunc(handler.AddEmployeeHandler),
 	))

@@ -36,3 +36,16 @@ func RequireLogin(store *sessions.FilesystemStore, db *sql.DB, next http.Handler
 		}),
 	)
 }
+
+func RequireAdminLogin(store *sessions.FilesystemStore, db *sql.DB, next http.Handler) http.Handler {
+	return RequireLogin(store, db,
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			employee := r.Context().Value(config.LoginUserContextKey).(model.Employee)
+			if !employee.IsAdmin {
+				http.Error(w, "権限がありません", http.StatusUnauthorized)
+				return
+			}
+			next.ServeHTTP(w, r)
+		}),
+	)
+}
