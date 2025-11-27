@@ -27,4 +27,13 @@ CREATE TABLE paid_leave_company_tbl (
     registered_at DATETIME NOT NULL,
     deleted_at DATETIME NULL
 );
+CREATE DATABASE ${MYSQL_AUTH_DATABASE};
+USE ${MYSQL_AUTH_DATABASE};
+CREATE TABLE auth_tbl (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    employee_id VARCHAR(20) NOT NULL,
+    hash VARCHAR(64) NOT NULL,
+    UNIQUE(employee_id),
+    FOREIGN KEY (employee_id) REFERENCES ${MYSQL_DATABASE}.employees_tbl(id)
+);
 EOSQL
