@@ -61,6 +61,10 @@ func main() {
 	http.Handle("/vacation/add", middleware.UseDB(db, middleware.RequireLogin(store, db,
 		http.HandlerFunc(handler.AddPaidLeaveHandler),
 	)))
+
+	http.Handle("/vacation/info", middleware.UseDB(db, middleware.RequireLogin(store, db,
+		http.HandlerFunc(handler.GetInfoHandler),
+	)))
 	fmt.Println("starting...")
 	err = http.ListenAndServe(":80", nil)
 	if err != nil {

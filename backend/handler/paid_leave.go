@@ -55,3 +55,18 @@ func AddPaidLeaveHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "success")
 }
 
+func GetInfoHandler(w http.ResponseWriter, r *http.Request) {
+	db := r.Context().Value(config.DBContextKey).(*sql.DB)
+	employee := r.Context().Value(config.LoginUserContextKey).(model.Employee)
+	info, err := service.CalculateSumPaidLeaveInfo(db, employee.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var res dto.GetInfoResponse
+	res.Total = info.TotalCount
+	res.Used = info.Used
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
