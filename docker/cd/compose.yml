@@ -5,14 +5,18 @@ services:
       dockerfile: docker/cd/backend/DockerFile
     environment:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_AUTH_DATABASE=${MYSQL_AUTH_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
     ports:
       - "${GO_PORT}:80"
     volumes:
       - ../../backend:/backend
+      - session_data:/session_data
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     stdin_open: true
     tty: true
   frontend:
@@ -32,8 +36,23 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_AUTH_DATABASE=${MYSQL_AUTH_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysql",
+          "-h",
+          "localhost",
+          "-u",
+          "${MYSQL_USER}",
+          "-p${MYSQL_PASSWORD}",
+        ]
+      interval: 2s
+      timeout: 30s
+      retries: 100
     ports:
       - "${MYSQL_PORT}:3306"
     volumes:
@@ -42,3 +61,4 @@ services:
     tty: true
 volumes:
   db_data:
+  session_data:
