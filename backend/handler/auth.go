@@ -31,7 +31,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		session.Values = make(map[interface{}]interface{})
 		session.Options.MaxAge = -1
-		session.Save(r, w)
+		if saveErr := session.Save(r, w); saveErr != nil {
+			err = fmt.Errorf("%w reset error: %s", err, saveErr)
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

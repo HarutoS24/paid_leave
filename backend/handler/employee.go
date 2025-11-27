@@ -41,16 +41,20 @@ func AddEmployeeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	defer func() {
 		if p := recover(); p != nil {
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				panic(fmt.Errorf("panic: %v; rollback error: %w", p, rErr))
+			}
 			panic(p)
 		} else if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				fmt.Printf("failed to rollback: %s", rErr.Error())
+				err = fmt.Errorf("%w; rollback error: %s", err, rErr)
+			}
 		} else {
-			tx.Commit()
-			fmt.Fprintln(w, "successfully added the user")
+			err = tx.Commit()
 		}
 	}()
 
