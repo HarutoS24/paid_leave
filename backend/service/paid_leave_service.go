@@ -187,12 +187,17 @@ func AddPaidLeaveByOffset(db *sql.DB, params AddPaidLeaveParams, off int) error 
 
 	defer func() {
 		if p := recover(); p != nil {
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				panic(fmt.Errorf("panic: %v; rollback error: %w", p, rErr))
+			}
 			panic(p)
 		} else if err != nil {
-			tx.Rollback()
+			if rErr := tx.Rollback(); rErr != nil {
+				fmt.Printf("failed to rollback: %s", rErr.Error())
+				err = fmt.Errorf("%w; rollback error: %s", err, rErr)
+			}
 		} else {
-			tx.Commit()
+			err = tx.Commit()
 		}
 	}()
 
