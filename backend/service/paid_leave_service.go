@@ -24,6 +24,12 @@ var VacationCounts = []int{10, 11, 12, 14, 16, 18, 20}
 const dev_joiningdate = "2023/08/29"
 const dev_today = "2027/03/10"
 
+type AddPaidLeaveParams struct {
+	EmployeeID   string
+	VacationDate time.Time
+	StartAtHour  int
+	Duration     int
+}
 
 // off年前の有給がいつ付与されたのか計算する
 func CalculateVacationGivenDateByOffset(db *sql.DB, employeeID string, off int) (*time.Time, error) {
@@ -164,6 +170,73 @@ func CalculateSumPaidLeaveInfo(db *sql.DB, employeeID string) (*PaidLeaveInfoSum
 	return &infoSum, nil
 }
 
+func AddPaidLeaveByOffset(db *sql.DB, params AddPaidLeaveParams, off int) error {
+	givenAt, err := CalculateVacationGivenDateByOffset(db, params.EmployeeID, off)
+	if err != nil {
+		return err
+	}
+	today, _ := time.Parse("2006/01/02", dev_today)
+	var p = []repo.AddLeaveEmployeeParams{{
+		EmployeeID:   params.EmployeeID,
+		Duration:     params.Duration,
+		StartAtHour:  params.StartAtHour,
+		VacationDate: params.VacationDate,
+		GivenAt:      *givenAt,
+		RegisteredAt: today,
+	},
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			tx.Rollback()
+		} else {
+			tx.Commit()
+		}
+	}()
+
+	if err := repo.AddLeaveEmployee(tx, p); err != nil {
+		return err
+	}
+	return err
+}
+
+func AddPaidLeave(db *sql.DB, params AddPaidLeaveParams) error {
+	requiredDays := durationToDay(params.Duration)
+	fmt.Printf("required: %f\n", requiredDays)
+	added := 0
+	for i := 3; i >= 0; i-- {
+		fmt.Println(i)
+		info, err := CalculateGeneralPaidLeaveInfo(db, params.EmployeeID, i)
+		if err != nil {
+			return err
+		}
+		if info == nil {
+			continue
+		}
+		remainingDays := float64(info.TotalCount) - info.Used
+		fmt.Printf("remaining: %f\n", remainingDays)
+		if requiredDays > remainingDays {
+			continue
+		}
+		err = AddPaidLeaveByOffset(db, params, i)
+		if err != nil {
+			return err
+		}
+		added += 1
+		break
+	}
+	if added == 0 {
+		return fmt.Errorf("有給の数が足りません")
+	}
+	return nil
+}
 
 func durationToDay(dur int) float64 {
 	return float64(dur) / 8.0
