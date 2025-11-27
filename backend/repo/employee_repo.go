@@ -25,6 +25,13 @@ type AddEmployeeParams struct {
 	RegisteredAt time.Time
 	DeletedAt    sql.NullTime
 }
+
+func AddEmployee(tx *sql.Tx, employee AddEmployeeParams) error {
+	query := fmt.Sprintf("INSERT INTO %s.employees_tbl (id, name, is_admin, joining_date, registered_at) VALUES (?, ?, ?, ?, ?);", dbName)
+	_, err := tx.Exec(query, employee.EmployeeID, employee.EmployeeName, employee.IsAdmin, employee.JoiningDate, employee.RegisteredAt)
+	return err
+}
+
 func GetEmployeeByID(db *sql.DB, employeeID string) (model.Employee, error) {
 	query := fmt.Sprintf("SELECT id, name, is_admin, joining_date, registered_at, deleted_at FROM %s.employees_tbl WHERE id=?;", dbName)
 	row := db.QueryRow(query, employeeID)

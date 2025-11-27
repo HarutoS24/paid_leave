@@ -39,3 +39,14 @@ func IsLoggedIn(session *sessions.Session) (bool, error) {
 	}
 	return isLoggedIn, nil
 }
+
+func AddAuth(tx *sql.Tx, employeeID string, password string) error {
+	var hash = sha256.Sum256([]byte(password))
+	var hashStr = hex.EncodeToString(hash[:])
+	var params = repo.AddAuthParams{
+		EmployeeID: employeeID,
+		Hash:       hashStr,
+	}
+	err := repo.AddAuth(tx, params)
+	return err
+}

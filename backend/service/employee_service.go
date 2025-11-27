@@ -33,3 +33,8 @@ func GetLoggedInEmployee(db *sql.DB, session *sessions.Session) (model.Employee,
 	}
 	return employee, nil
 }
+
+func AddEmployee(tx *sql.Tx, employeeID string, isAdmin bool, employeeName string, joiningDate time.Time) error {
+	var params = repo.AddEmployeeParams{EmployeeID: employeeID, EmployeeName: employeeName, IsAdmin: isAdmin, JoiningDate: joiningDate, RegisteredAt: time.Now()}
+	return repo.AddEmployee(tx, params)
+}
