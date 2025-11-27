@@ -62,3 +62,12 @@ func AddEmployeeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func GetLoggedInEmployeeHandler(w http.ResponseWriter, r *http.Request) {
+	employee := r.Context().Value(config.LoginUserContextKey).(model.Employee)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(employee); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

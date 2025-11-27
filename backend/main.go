@@ -3,7 +3,6 @@ package main
 import (
 	"backend/handler"
 	"backend/middleware"
-	"backend/service"
 	"database/sql"
 	"fmt"
 	"net/http"
